@@ -1,12 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/users');
+const Compte = require('../models/comptes');
 
 // upload image
 const multer = require('multer');
 
 // remove image
 const fs = require('fs');
+const comptes = require('../models/comptes');
 
 // image upload
 var storage = multer.diskStorage({
@@ -159,13 +161,67 @@ router.get('/delete/:id', (req, res) => {
     });
 });
 
-/*
-router.get('/', (req, res) => {
-    res.render('index', {
-        title: "Home page"
+// login
+router.get('/login', (req, res) => {
+    res.render('login', {
+        title: 'Login Page',
     });
 }
 );
-*/
+
+router.post('/login', async (req, res) => {
+    const compte = await Compte.findOne({ email: req.body.email });
+    if (compte == null) {
+        res.json({
+            message: 'Compte n\'existe pas',
+            type: 'danger',
+        });
+    } else {
+        if (compte.password == req.body.password) {
+            req.session.message = {
+                message: 'Bienvenue ' + compte.name,
+                type: 'success',
+            };
+            res.redirect('/');
+        } else {
+            res.json({
+                message: 'Mot de passe incorrect',
+                type: 'info',
+            });
+        }
+    }
+});
+
+// Register
+router.get('/register', (req, res) => {
+    res.render('register', {
+        title: 'Login Page',
+    });
+}
+);
+
+//Insert Compte into database
+router.post('/register', async (req, res) => {
+    const compte = new Compte({
+        name: req.body.name,
+        email: req.body.email,
+        password: req.body.password,
+    });
+    compte.save((err, compte) => {
+        if (err) {
+            res.json({
+                error: err.message,
+                type: 'danger'
+            });
+        } else {
+            req.session.message = {
+                type: 'success',
+                message: 'Compte bien ajoutée ',
+            };
+            res.redirect('/login');
+        }
+    });
+});
+
 
 module.exports = router;
