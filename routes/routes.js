@@ -22,6 +22,16 @@ var storage = multer.diskStorage({
 });
 var upload = multer({ storage: storage }).single('image');
 
+
+// home
+router.get('/', (req, res) => {
+    if (req.session.user) {
+        res.render('/', { message: req.session.message });
+    } else {
+        res.redirect('/login');
+    }
+});
+
 //Insert user into database
 router.post('/add', upload, async (req, res) => {
     const user = new User({
@@ -46,6 +56,8 @@ router.post('/add', upload, async (req, res) => {
         }
     });
 });
+
+
 
 // get All users
 router.get('/', (req, res) => {
@@ -118,12 +130,12 @@ router.post('/update/:id', upload, async (req, res) => {
         password: req.body.password,
         image: new_image,
     }, (err, user) => {
-        if(err) {
+        if (err) {
             res.json({
                 message: err.message,
                 type: 'danger'
             });
-        }else {
+        } else {
             req.session.message = {
                 type: 'success',
                 message: 'User bien modifié ',
@@ -138,20 +150,20 @@ router.get('/delete/:id', (req, res) => {
     let id = req.params.id;
     User.findByIdAndRemove(id, (err, result) => {
         // remove imgage
-        if(result.image != '') {
+        if (result.image != '') {
             try {
-            fs.unlinkSync('./uploads/' + result.image);
-            }catch(err) {
+                fs.unlinkSync('./uploads/' + result.image);
+            } catch (err) {
                 console.log(err);
             }
         }
 
-        if(err) {
+        if (err) {
             res.json({
                 message: err.message,
                 type: 'danger'
             });
-        }else {
+        } else {
             req.session.message = {
                 message: 'User bien supprimé',
                 type: 'info',
